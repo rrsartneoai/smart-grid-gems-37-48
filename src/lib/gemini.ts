@@ -2,13 +2,15 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { toast } from "@/hooks/use-toast";
 
-const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
+// Użyj klucza API z zmiennej środowiskowej lub użyj domyślnego
+const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || "AIzaSyBicTIEjL3cvBSFUhlRX3vmMQZlqLXc0AQ";
 
-if (!API_KEY) {
-  console.error("Brak klucza API dla Gemini. Proszę dodać VITE_GOOGLE_API_KEY.");
+// Sprawdź czy klucz API jest dostępny, ale nie wyświetlaj błędu, jeśli użyto wartości domyślnej
+if (!import.meta.env.VITE_GOOGLE_API_KEY) {
+  console.warn("Używam domyślnego klucza API dla Gemini. Zalecane jest dodanie własnego klucza poprzez VITE_GOOGLE_API_KEY.");
 }
 
-const genAI = new GoogleGenerativeAI(API_KEY || "");
+const genAI = new GoogleGenerativeAI(API_KEY);
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -22,10 +24,6 @@ const isRateLimitError = (error: any) => {
 };
 
 export const generateGeminiResponse = async (prompt: string, retryCount = 0): Promise<string> => {
-  if (!API_KEY) {
-    return "Przepraszam, ale brak skonfigurowanego klucza API dla Gemini. Proszę skontaktować się z administratorem.";
-  }
-
   try {
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     const result = await model.generateContent(prompt);

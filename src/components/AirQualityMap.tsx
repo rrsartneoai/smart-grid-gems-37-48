@@ -31,7 +31,26 @@ export const AirQualityMap = () => {
     const fetchData = async () => {
       try {
         const aqicnData = await fetchAQICNData();
-        setSensors(aqicnData);
+        
+        // Konwertuj dane AirQualityData do formatu SensorData
+        const convertedData: SensorData[] = aqicnData.map(station => ({
+          id: station.id,
+          stationName: station.stationName,
+          region: station.region,
+          lat: station.coordinates[0],
+          lng: station.coordinates[1],
+          pm25: station.measurements.pm25,
+          pm10: station.measurements.pm10,
+          timestamp: station.measurements.timestamp,
+          additionalData: {
+            aqi: station.measurements.aqi,
+            temperature: station.measurements.temperature,
+            humidity: station.measurements.humidity,
+            source: 'AQICN'
+          }
+        }));
+        
+        setSensors(convertedData);
       } catch (error) {
         console.error('Błąd podczas pobierania danych:', error);
       }
@@ -91,16 +110,16 @@ export const AirQualityMap = () => {
                 icon={L.divIcon({
                   className: 'custom-marker',
                   html: `<div style="background-color: ${getAQIColor(sensor.additionalData?.aqi || 0)};
-                                                     width: 30px;
-                                                     height: 30px;
-                                                     border-radius: 50%;
-                                                     display: flex;
-                                                     align-items: center;
-                                                     justify-content: center;
-                                                     color: white;
-                                                     font-weight: bold;">
-                                            ${sensor.additionalData?.aqi != null ? sensor.additionalData.aqi : '?'}
-                                          </div>`
+                                               width: 30px;
+                                               height: 30px;
+                                               border-radius: 50%;
+                                               display: flex;
+                                               align-items: center;
+                                               justify-content: center;
+                                               color: white;
+                                               font-weight: bold;">
+                                      ${sensor.additionalData?.aqi != null ? sensor.additionalData.aqi : '?'}
+                                    </div>`
                 })}
               >
                 <Popup>
