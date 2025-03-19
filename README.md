@@ -6,7 +6,7 @@ Repozytorium Smart Grid & Air Quality Dashboard zostało zaprojektowane w celu m
 
 Funkcje i technologie
 
-To repozytorium implementuje zaawansowany system oprogramowania, który integruje kilka kluczowych technologii i funkcji. Wykorzystuje głównie JavaScript i TypeScript, ze szczególnym uwzględnieniem analizy danych opartej na sztucznej inteligencji. Funkcje obejmują główny pulpit nawigacyjny dla wskaźników i jakości powietrza, interaktywne mapy, szczegółową analizę danych i monitorowanie stanu urządzeń IoT. Asystent AI jest w stanie wykrywać anomalie, prognozować i generować zalecenia na podstawie analizy danych. System obsługuje również przetwarzanie dokumentów i generowanie raportów, wykorzystując przetwarzanie języka naturalnego (NLP) do analizy tekstu. Ponadto oferuje opcje dostosowywania, takie jak tryb ciemny/jasny, wybór języka i dostęp do samouczka, wraz z możliwościami eksportu danych i spersonalizowanych alertów.
+To repozytorium implementuje zaawansowany system oprogramowania, który integruje kilka kluczowych technologii i funkcji. Wykorzystuje głównie JavaScript i TypeScript, ze szczególnym uwzględnieniem analizy danych opartej na sztucznej inteligencji. Funkcje obejmują główny pulpit nawigacyjny dla wskaźników energii i jakości powietrza, interaktywne mapy, szczegółową analizę danych i monitorowanie stanu urządzeń IoT. Asystent AI jest w stanie wykrywać anomalie, prognozować i generować zalecenia na podstawie analizy danych. System obsługuje również przetwarzanie dokumentów i generowanie raportów, wykorzystując przetwarzanie języka naturalnego (NLP) do analizy tekstu. Ponadto oferuje opcje dostosowywania, takie jak tryb ciemny/jasny, wybór języka i dostęp do samouczka, wraz z możliwościami eksportu danych i spersonalizowanych alertów.
 
 W skrócie:
 
@@ -196,5 +196,4 @@ cp .env.example .env
 ### Odtwarzanie głosowe
 Funkcja odtwarzania głosowego wymaga klucza API ElevenLabs. Możesz go uzyskać na stronie [ElevenLabs](https://elevenlabs.io/).
 
-
-dsfhnghaiugh;gfhgji;a
+Działą!
