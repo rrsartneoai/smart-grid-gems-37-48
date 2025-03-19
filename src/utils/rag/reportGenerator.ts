@@ -2,7 +2,7 @@
 import { getProjectData } from './projectDataStore';
 import { getDocumentChunks } from './documentProcessor';
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 // Use the same API key configuration as in lib/gemini.ts
 const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || "AIzaSyBicTIEjL3cvBSFUhlRX3vmMQZlqLXc0AQ";
@@ -17,12 +17,7 @@ const generateResponse = async (prompt: string): Promise<string> => {
     return response.text();
   } catch (error) {
     console.error("Błąd podczas generowania odpowiedzi:", error);
-    toast({
-      variant: "destructive",
-      title: "Błąd generowania",
-      description: "Nie udało się wygenerować raportu. Sprawdź klucz API Gemini.",
-      duration: 5000,
-    });
+    toast("Nie udało się wygenerować raportu. Sprawdź klucz API Gemini.");
     return "Wystąpił błąd podczas generowania raportu. Spróbuj ponownie później.";
   }
 };

@@ -1,6 +1,6 @@
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 // Use the same API key configuration as in lib/gemini.ts
 const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || "AIzaSyBicTIEjL3cvBSFUhlRX3vmMQZlqLXc0AQ";
@@ -54,12 +54,7 @@ export const extractKeyMetrics = async (text: string): Promise<Record<string, nu
       }
     } catch (error) {
       console.error('Błąd podczas generowania metryk:', error);
-      toast({
-        variant: "destructive",
-        title: "Błąd analizy",
-        description: "Nie udało się wyodrębnić metryk. Sprawdź klucz API Gemini.",
-        duration: 5000,
-      });
+      toast("Nie udało się wyodrębnić metryk. Sprawdź klucz API Gemini.");
       
       return { error: "Błąd komunikacji z API Gemini" };
     }

@@ -1,6 +1,6 @@
 
 import { useState, useCallback } from "react";
-import { toast as sonnerToast } from "sonner";
+import { toast as sonnerToast, Toast as SonnerToast } from "sonner";
 
 export interface ToastProps {
   id?: string;
@@ -19,10 +19,20 @@ export function useToast() {
       const id = Date.now().toString();
       const newToast = { id, title, description, variant, duration };
       
-      sonnerToast(title || "", {
-        description,
-        duration,
-      });
+      if (title && description) {
+        sonnerToast(title, {
+          description,
+          duration,
+        });
+      } else if (title) {
+        sonnerToast(title, {
+          duration,
+        });
+      } else if (description) {
+        sonnerToast(description, {
+          duration,
+        });
+      }
       
       setToasts((toasts) => [...toasts, newToast]);
       return id;
@@ -37,4 +47,18 @@ export function useToast() {
   return { toast, dismiss, toasts };
 }
 
-export { sonnerToast as toast };
+// Export a simpler version for direct use
+export const toast = (message: string | ToastProps) => {
+  if (typeof message === 'string') {
+    return sonnerToast(message);
+  } else {
+    const { title, description, duration } = message;
+    if (title && description) {
+      return sonnerToast(title, { description, duration });
+    } else if (title) {
+      return sonnerToast(title, { duration });
+    } else if (description) {
+      return sonnerToast(description, { duration });
+    }
+  }
+};

@@ -1,6 +1,6 @@
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 // Użyj klucza API z zmiennej środowiskowej lub użyj domyślnego
 const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || "AIzaSyBicTIEjL3cvBSFUhlRX3vmMQZlqLXc0AQ";
@@ -42,34 +42,20 @@ export const generateGeminiResponse = async (prompt: string, retryCount = 0): Pr
       console.log(`Rate limited. Retrying in ${waitTime}ms...`);
       
       // Show toast to inform user about the retry
-      toast({
-        title: "Przekroczono limit zapytań",
-        description: `Ponowna próba za ${waitTime/1000} sekund...`,
-        duration: waitTime,
-      });
+      toast(`Przekroczono limit zapytań. Ponowna próba za ${waitTime/1000} sekund...`);
       
       await delay(waitTime);
       return generateGeminiResponse(prompt, retryCount + 1);
     }
 
     if (isRateLimitError(error)) {
-      toast({
-        variant: "destructive",
-        title: "Przekroczono limit zapytań",
-        description: "Proszę spróbować ponownie za kilka minut.",
-        duration: 5000,
-      });
+      toast("Przekroczono limit zapytań. Proszę spróbować ponownie za kilka minut.");
       return "Przepraszam, ale przekroczono limit zapytań do API. Proszę odczekać kilka minut i spróbować ponownie.";
     }
 
     // Authentication or API key issues
     if (error?.status === 403 || (error?.message && error.message.includes("API Key"))) {
-      toast({
-        variant: "destructive",
-        title: "Problem z kluczem API",
-        description: "Sprawdź czy klucz API Gemini jest poprawnie skonfigurowany.",
-        duration: 5000,
-      });
+      toast("Problem z kluczem API. Sprawdź czy klucz API Gemini jest poprawnie skonfigurowany.");
       return "Przepraszam, wystąpił problem z uwierzytelnieniem klucza API. Proszę sprawdzić konfigurację klucza Gemini API.";
     }
 
