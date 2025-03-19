@@ -12,7 +12,7 @@ System Smart Grid & Air Quality Dashboard został opracowany jako narzędzie do 
 
 ## Uruchomienie projektu
 
-online web preview : https://smart-grid-gems-37-29.lovable.app/
+online web preview : [https://smart-grid-gems-37-29.lovable.app/](https://smart-grid-gems-37-48.lovable.app/)
 
 ### Wymagania wstępne
 - Node.js (zalecana wersja 16 lub nowsza)
