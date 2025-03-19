@@ -9,6 +9,7 @@ import {
   simulateScenario 
 } from "@/utils/advancedAnalysis";
 import { ProjectData } from "@/components/types/ProjectData";
+import { toast } from "@/hooks/use-toast";
 
 export const processRagQuery = async (query: string): Promise<SensorResponse> => {
   try {
@@ -230,11 +231,24 @@ export const processRagQuery = async (query: string): Promise<SensorResponse> =>
     if (queryLower.includes('raport') || 
         queryLower.includes('sprawozdani') || 
         queryLower.includes('podsumowani')) {
-      const topic = query.replace(/raport|sprawozdanie|podsumowanie|wygeneruj|utwórz|o|na temat/gi, '').trim() || 
-                    'jakość powietrza i zużycie energii';
-      
-      const report = await generateReport(topic);
-      return { text: report };
+      try {
+        const topic = query.replace(/raport|sprawozdanie|podsumowanie|wygeneruj|utwórz|o|na temat/gi, '').trim() || 
+                      'jakość powietrza i zużycie energii';
+        
+        const report = await generateReport(topic);
+        return { text: report };
+      } catch (reportError) {
+        console.error("Błąd generowania raportu:", reportError);
+        toast({
+          variant: "destructive",
+          title: "Błąd generowania raportu",
+          description: "Nie udało się wygenerować raportu. Spróbuj ponownie.",
+          duration: 5000,
+        });
+        return { 
+          text: "Przepraszam, wystąpił błąd podczas generowania raportu. Proszę sprawdzić, czy klucz API Gemini jest poprawnie skonfigurowany i spróbować ponownie."
+        };
+      }
     }
     
     // If user is asking about current air quality
@@ -286,8 +300,21 @@ export const processRagQuery = async (query: string): Promise<SensorResponse> =>
     }
     
     // Default RAG response for other queries
-    const response = await generateRAGResponse(query);
-    return { text: response };
+    try {
+      const response = await generateRAGResponse(query);
+      return { text: response };
+    } catch (ragError) {
+      console.error("Błąd generowania odpowiedzi RAG:", ragError);
+      toast({
+        variant: "destructive",
+        title: "Błąd odpowiedzi",
+        description: "Nie udało się wygenerować odpowiedzi. Sprawdź konfigurację API.",
+        duration: 5000,
+      });
+      return { 
+        text: "Przepraszam, nie mogę teraz odpowiedzieć na to pytanie. Proszę sprawdzić, czy klucz API Gemini jest poprawnie skonfigurowany."
+      };
+    }
   } catch (error) {
     console.error("Error generating RAG response:", error);
     return { 

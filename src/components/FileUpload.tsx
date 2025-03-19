@@ -1,16 +1,16 @@
-
 import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { processDocumentForRAG } from "@/utils/rag"; // Updated import
+import { processDocumentForRAG } from "@/utils/rag";
 import { processImageFile, processPdfFile, processDocxFile, processCsvFile, processTextFile } from "@/utils/fileProcessing";
 import { useToast } from "@/hooks/use-toast";
 import { FileInfo } from "./upload/FileInfo";
-import { HelpCircle, FileText, Image as ImageIcon, Upload, X } from "lucide-react";
+import { HelpCircle, FileText, Image as ImageIcon, Upload, X, AlertTriangle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "./ui/button";
 import { motion, AnimatePresence } from "framer-motion";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface UploadingFile {
    file: File;
@@ -32,14 +32,15 @@ const ALLOWED_FILE_TYPES = {
    'video/*': ['.mp4', '.mov']
 };
 
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
-const MAX_TOTAL_SIZE = 200 * 1024 * 1024; // 200MB
+const MAX_FILE_SIZE = 50 * 1024 * 1024;
+const MAX_TOTAL_SIZE = 200 * 1024 * 1024;
 
 export function FileUpload() {
    const { toast } = useToast();
    const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
    const [topics, setTopics] = useState<string[]>([]);
    const [isDragActive, setIsDragActive] = useState(false);
+   const [showApiKeyWarning, setShowApiKeyWarning] = useState(!import.meta.env.VITE_GOOGLE_API_KEY);
 
    const formatFileSize = (bytes: number) => {
        if (bytes === 0) return "0 B";
@@ -143,6 +144,9 @@ export function FileUpload() {
 
            if(result){
                setTopics(result.topics);
+               if (result.topics.some(topic => topic.includes("Błąd") || topic.includes("błąd"))) {
+                   setShowApiKeyWarning(true);
+               }
            }
 
            clearInterval(progressInterval);
@@ -164,11 +168,27 @@ export function FileUpload() {
                    error: error instanceof Error ? error.message : "Nieznany błąd" 
                } : f
            ));
-           toast({
-               variant: "destructive",
-               title: "Błąd",
-               description: `Błąd podczas przetwarzania pliku: ${file.name}`,
-           });
+
+           const errorMessage = error instanceof Error ? error.message : "Nieznany błąd";
+           if (
+               errorMessage.includes("API") || 
+               errorMessage.includes("api") || 
+               errorMessage.includes("klucz") || 
+               errorMessage.includes("Gemini")
+           ) {
+               setShowApiKeyWarning(true);
+               toast({
+                   variant: "destructive",
+                   title: "Błąd API",
+                   description: "Problem z kluczem API Gemini. Sprawdź konfigurację.",
+               });
+           } else {
+               toast({
+                   variant: "destructive",
+                   title: "Błąd",
+                   description: `Błąd podczas przetwarzania pliku: ${file.name}`,
+               });
+           }
        }
    };
 
@@ -196,6 +216,25 @@ export function FileUpload() {
 
    return (
        <div className="space-y-4">
+           {showApiKeyWarning && (
+               <Alert variant="warning" className="bg-yellow-50 border-yellow-200">
+                   <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                   <AlertTitle className="text-yellow-800">Uwaga: Klucz API Gemini</AlertTitle>
+                   <AlertDescription className="text-yellow-700">
+                       Używasz domyślnego klucza API Gemini, który może mieć ograniczenia.
+                       Zalecane jest dodanie własnego klucza API poprzez zmienną środowiskową VITE_GOOGLE_API_KEY.
+                       <Button 
+                           variant="outline" 
+                           size="sm" 
+                           className="mt-2 text-yellow-800 border-yellow-400 hover:bg-yellow-100"
+                           onClick={() => setShowApiKeyWarning(false)}
+                       >
+                           Rozumiem
+                       </Button>
+                   </AlertDescription>
+               </Alert>
+           )}
+           
            <div className="flex items-center justify-between">
                <h3 className="text-lg font-semibold">Wgraj pliki</h3>
                <TooltipProvider>

@@ -1,13 +1,17 @@
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { toast } from "@/hooks/use-toast";
 
-const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GOOGLE_API_KEY || "");
+// Use the same API key configuration as in lib/gemini.ts
+const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || "AIzaSyBicTIEjL3cvBSFUhlRX3vmMQZlqLXc0AQ";
+
+const genAI = new GoogleGenerativeAI(API_KEY);
 
 // Extract key metrics from text documents
 export const extractKeyMetrics = async (text: string): Promise<Record<string, number | string>> => {
   try {
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-pro"
+      model: "gemini-1.5-flash" // Change to more reliable model
     });
     
     const prompt = `
@@ -25,27 +29,39 @@ export const extractKeyMetrics = async (text: string): Promise<Record<string, nu
       ${text}
     `;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const metricsString = response.text();
-    
     try {
-      const cleanMetricsString = metricsString.replace(/```(json)?\n?|```/g, '').trim();
-      console.log("Original metricsString:", metricsString);
-      console.log("Cleaned metricsString:", cleanMetricsString);
-      if (!cleanMetricsString || cleanMetricsString === "{}") {
-          console.warn("Brak metryk do wyodrębnienia lub pusty JSON.");
-          return { error: "Nie udało się wyodrębnić metryk w odpowiednim formacie" };
-      }
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const metricsString = response.text();
+      
       try {
-        return JSON.parse(cleanMetricsString);
+        const cleanMetricsString = metricsString.replace(/```(json)?\n?|```/g, '').trim();
+        console.log("Original metricsString:", metricsString);
+        console.log("Cleaned metricsString:", cleanMetricsString);
+        if (!cleanMetricsString || cleanMetricsString === "{}") {
+            console.warn("Brak metryk do wyodrębnienia lub pusty JSON.");
+            return { error: "Nie udało się wyodrębnić metryk w odpowiednim formacie" };
+        }
+        try {
+          return JSON.parse(cleanMetricsString);
+        } catch (e) {
+          console.error('Błąd parsowania JSON z metrykami:', e, "String to parse:", cleanMetricsString);
+          return { error: "Nie udało się wyodrębnić metryk w odpowiednim formacie" };
+        }
       } catch (e) {
-        console.error('Błąd parsowania JSON z metrykami:', e, "String to parse:", cleanMetricsString);
+        console.error('Błąd parsowania JSON z metrykami:', e);
         return { error: "Nie udało się wyodrębnić metryk w odpowiednim formacie" };
       }
-    } catch (e) {
-      console.error('Błąd parsowania JSON z metrykami:', e);
-      return { error: "Nie udało się wyodrębnić metryk w odpowiednim formacie" };
+    } catch (error) {
+      console.error('Błąd podczas generowania metryk:', error);
+      toast({
+        variant: "destructive",
+        title: "Błąd analizy",
+        description: "Nie udało się wyodrębnić metryk. Sprawdź klucz API Gemini.",
+        duration: 5000,
+      });
+      
+      return { error: "Błąd komunikacji z API Gemini" };
     }
   } catch (error) {
     console.error('Błąd podczas ekstrakcji metryk:', error);

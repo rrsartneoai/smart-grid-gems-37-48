@@ -20,7 +20,12 @@ const BASE_DELAY = 2000; // 2 seconds initial delay
 const isRateLimitError = (error: any) => {
   return error?.status === 429 || 
          error?.body?.includes("RATE_LIMIT_EXCEEDED") ||
-         error?.body?.includes("RESOURCE_EXHAUSTED");
+         error?.body?.includes("RESOURCE_EXHAUSTED") ||
+         (error?.message && (
+           error.message.includes("RATE_LIMIT_EXCEEDED") || 
+           error.message.includes("RESOURCE_EXHAUSTED") || 
+           error.message.includes("429")
+         ));
 };
 
 export const generateGeminiResponse = async (prompt: string, retryCount = 0): Promise<string> => {
@@ -55,6 +60,17 @@ export const generateGeminiResponse = async (prompt: string, retryCount = 0): Pr
         duration: 5000,
       });
       return "Przepraszam, ale przekroczono limit zapytań do API. Proszę odczekać kilka minut i spróbować ponownie.";
+    }
+
+    // Authentication or API key issues
+    if (error?.status === 403 || (error?.message && error.message.includes("API Key"))) {
+      toast({
+        variant: "destructive",
+        title: "Problem z kluczem API",
+        description: "Sprawdź czy klucz API Gemini jest poprawnie skonfigurowany.",
+        duration: 5000,
+      });
+      return "Przepraszam, wystąpił problem z uwierzytelnieniem klucza API. Proszę sprawdzić konfigurację klucza Gemini API.";
     }
 
     return "Przepraszam, wystąpił błąd podczas przetwarzania zapytania. Proszę spróbować ponownie za chwilę.";

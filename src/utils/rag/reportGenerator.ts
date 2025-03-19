@@ -1,7 +1,31 @@
 
 import { getProjectData } from './projectDataStore';
 import { getDocumentChunks } from './documentProcessor';
-import { getGeminiResponse } from '@/lib/gemini';
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { toast } from "@/hooks/use-toast";
+
+// Use the same API key configuration as in lib/gemini.ts
+const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || "AIzaSyBicTIEjL3cvBSFUhlRX3vmMQZlqLXc0AQ";
+const genAI = new GoogleGenerativeAI(API_KEY);
+
+// Directly generate response without depending on getGeminiResponse
+const generateResponse = async (prompt: string): Promise<string> => {
+  try {
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text();
+  } catch (error) {
+    console.error("Błąd podczas generowania odpowiedzi:", error);
+    toast({
+      variant: "destructive",
+      title: "Błąd generowania",
+      description: "Nie udało się wygenerować raportu. Sprawdź klucz API Gemini.",
+      duration: 5000,
+    });
+    return "Wystąpił błąd podczas generowania raportu. Spróbuj ponownie później.";
+  }
+};
 
 // Automatically generate report based on documents and project data
 export const generateReport = async (topic: string): Promise<string> => {
@@ -51,7 +75,7 @@ export const generateReport = async (topic: string): Promise<string> => {
       Format raportu powinien być przejrzysty, z nagłówkami i podpunktami.
     `;
     
-    const report = await getGeminiResponse(prompt);
+    const report = await generateResponse(prompt);
     return report;
   } catch (error) {
     console.error('Błąd podczas generowania raportu:', error);
