@@ -1,6 +1,7 @@
+
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { useEffect, useState } from 'react';
-import { fetchAirlyData, fetchGIOSData, fetchAQICNData } from '../api/airQuality';
+import { fetchAQICNData } from '@/components/pomerania/api/sources/aqicn';
 import L from 'leaflet';
 import { SensorData } from './pomerania/types/sensors';
 import 'leaflet/dist/leaflet.css';
@@ -29,7 +30,7 @@ export const AirQualityMap = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const aqicnData = await fetchAirQualityData();
+        const aqicnData = await fetchAQICNData();
         setSensors(aqicnData);
       } catch (error) {
         console.error('Błąd podczas pobierania danych:', error);

@@ -2,12 +2,14 @@
 import { useState, useCallback } from "react";
 import { toast as sonnerToast } from "sonner";
 
-type ToastProps = {
+export interface ToastProps {
+  id?: string;
   title?: string;
   description?: string;
   variant?: "default" | "destructive";
   duration?: number;
-};
+  action?: React.ReactNode;
+}
 
 export function useToast() {
   const [toasts, setToasts] = useState<ToastProps[]>([]);

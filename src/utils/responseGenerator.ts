@@ -94,7 +94,7 @@ async function generateAirQualitySection() {
       return "Brak dostępnych danych o jakości powietrza.";
     }
 
-    const avgAQI = stations.reduce((sum, station) => sum + station.aqi, 0) / stations.length;
+    const avgAQI = stations.reduce((sum, station) => sum + (typeof station.aqi === 'number' ? station.aqi : parseInt(station.aqi) || 0), 0) / stations.length;
     
     let stationsDetail = stations
       .map(station => `- ${station.station.name}: AQI ${station.aqi}`)
