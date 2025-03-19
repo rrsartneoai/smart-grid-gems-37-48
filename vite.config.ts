@@ -8,7 +8,11 @@ import fs from 'fs';
 export default defineConfig(({ mode }) => ({
   server: {
     port: 8080,
-    allowedHosts: ["8080-rrsartneoai-smartgridge-vh2z0g82eqs.ws-eu118.gitpod.io", "8080-rrsartneoai-smartgridge-oi7sdi8z6ol.ws-eu118.gitpod.io", "8080-rrsartneoai-smartgridge-l4kffhovq95.ws-eu118.gitpod.io", "8081-rrsartneoai-smartgridge-l4kffhovq95.ws-eu118.gitpod.io", "8080-rrsartneoai-smartgridge-f6h9cuiablz.ws-eu118.gitpod.io", "5173-rrsartneoai-smartgridge-mbl3sjgf5gd.ws-eu118.gitpod.io", "8080-rrsartneoai-smartgridge-njq9is1z4xl.ws-eu118.gitpod.io"],
+    // Update to allow more generic hosts pattern
+    host: true,
+    hmr: {
+      clientPort: 8080,
+    },
   },
   plugins: [
     react(),
