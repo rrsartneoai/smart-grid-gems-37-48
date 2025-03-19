@@ -1,6 +1,6 @@
 
 import { useState, useCallback } from "react";
-import { toast as sonnerToast, Toast as SonnerToast } from "sonner";
+import { toast as sonnerToast } from "sonner";
 
 export interface ToastProps {
   id?: string;

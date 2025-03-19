@@ -1,6 +1,6 @@
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 
 // Use the same API key configuration as in lib/gemini.ts
 const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || "AIzaSyBicTIEjL3cvBSFUhlRX3vmMQZlqLXc0AQ";

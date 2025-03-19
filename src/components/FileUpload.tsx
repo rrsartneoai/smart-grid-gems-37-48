@@ -217,7 +217,7 @@ export function FileUpload() {
    return (
        <div className="space-y-4">
            {showApiKeyWarning && (
-               <Alert variant="warning" className="bg-yellow-50 border-yellow-200">
+               <Alert variant="destructive" className="bg-yellow-50 border-yellow-200">
                    <AlertTriangle className="h-4 w-4 text-yellow-600" />
                    <AlertTitle className="text-yellow-800">Uwaga: Klucz API Gemini</AlertTitle>
                    <AlertDescription className="text-yellow-700">
