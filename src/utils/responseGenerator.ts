@@ -1,3 +1,4 @@
+
 import { getStationsInBounds } from './services/waqiService';
 import { getPowerStats } from '../services/powerStatsService';
 
@@ -126,3 +127,4 @@ function generateRecommendations() {
 * Instalacja dodatkowych czujników w kluczowych lokalizacjach
 * Rozwój systemu powiadomień o przekroczeniach norm
 * Współpraca z lokalnymi władzami w zakresie poprawy jakości powietrza`;
+}
