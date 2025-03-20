@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { InfoCard } from "./InfoCard";
 import { ActionButtons } from "./ActionButtons";
@@ -10,14 +11,15 @@ import { RemoveSensorDialog } from "./dialogs/RemoveSensorDialog";
 import { SearchSensorDialog } from "./dialogs/SearchSensorDialog";
 import { toast } from "@/hooks/use-toast";
 import { SensorData } from "./types/sensors";
-import { AirQualitySource } from "./types/airQuality";
-import "react-toastify/dist/ReactToastify.css";
+import { searchStationsNear } from "@/utils/services/waqiService";
+import { isInTriCity } from "@/utils/locationUtils";
 
 export const PomeranianAirQuality = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isRemoveDialogOpen, setIsRemoveDialogOpen] = useState(false);
   const [isSearchDialogOpen, setIsSearchDialogOpen] = useState(false);
   const [customSensors, setCustomSensors] = useState<SensorData[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   
   useEffect(() => {
     const savedSensors = localStorage.getItem('customAirQualitySensors');
@@ -38,13 +40,30 @@ export const PomeranianAirQuality = () => {
   
   const handleAddSensor = async (data: SensorFormValues) => {
     try {
-      if (data.connectionType === 'url' && data.stationId) {
+      if (data.connectionType === 'url' && data.connectionValue) {
         toast({
           title: "Pobieranie danych",
-          description: `Pobieranie danych dla stacji ${data.stationId}...`
+          description: `Pobieranie danych dla stacji...`
         });
         
-        const stationId = data.stationId;
+        // Extract station ID from URL
+        let stationId = '';
+        if (data.connectionValue.includes('@')) {
+          const matches = data.connectionValue.match(/@(\d+)/);
+          if (matches && matches[1]) {
+            stationId = matches[1];
+          }
+        } else if (data.connectionValue.includes('feed/')) {
+          const matches = data.connectionValue.match(/feed\/(\d+)/);
+          if (matches && matches[1]) {
+            stationId = matches[1];
+          }
+        }
+        
+        if (!stationId) {
+          throw new Error('Nie można rozpoznać ID stacji z podanego URL');
+        }
+        
         const AQICN_TOKEN = '5a1271b20fbbb9c972814a7b8d31512e061e83e6';
         
         const response = await fetch(`https://api.waqi.info/feed/@${stationId}/?token=${AQICN_TOKEN}`);
@@ -62,7 +81,7 @@ export const PomeranianAirQuality = () => {
         const newSensor: SensorData = {
           id: `custom-aqicn-${stationId}`,
           stationName: data.name || result.data.city.name || `Stacja ${stationId}`,
-          region: result.data.city.name || 'Custom',
+          region: result.data.city.name || 'Trójmiasto',
           lat: result.data.city.geo[0],
           lng: result.data.city.geo[1],
           pm25: result.data.iaqi.pm25?.v || 0,
@@ -94,8 +113,8 @@ export const PomeranianAirQuality = () => {
         
         const newSensor: SensorData = {
           id: `custom-${Date.now()}`,
-          stationName: data.name,
-          region: 'Custom Region',
+          stationName: data.name || 'Nowa stacja',
+          region: 'Trójmiasto',
           lat: 54.372158,
           lng: 18.638306,
           pm25: Math.floor(Math.random() * 50),
@@ -143,13 +162,74 @@ export const PomeranianAirQuality = () => {
     setIsRemoveDialogOpen(false);
   };
 
-  const handleSearchSensor = (location: string, radius: number) => {
+  const handleSearchSensor = async (location: string, radius: number, coordinates: {lat: number, lng: number} | null) => {
     console.log("Searching for sensors near:", location, "within radius:", radius, "km");
     
     toast({
       title: "Wyszukiwanie czujników",
       description: `Wyszukiwanie czujników w pobliżu ${location} (promień: ${radius}km)`
     });
+    
+    if (!coordinates) {
+      toast({
+        title: "Błąd",
+        description: "Nie można znaleźć współrzędnych dla podanej lokalizacji",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      setIsSearching(true);
+      const stations = await searchStationsNear(coordinates.lat, coordinates.lng, radius);
+      
+      if (stations.length === 0) {
+        toast({
+          title: "Brak wyników",
+          description: `Nie znaleziono stacji pomiarowych w pobliżu ${location}`
+        });
+        setIsSearching(false);
+        return;
+      }
+      
+      // Convert WAQI stations to SensorData format
+      const newSensors: SensorData[] = stations.map(station => ({
+        id: `search-aqicn-${station.uid}`,
+        stationName: station.station.name,
+        region: isInTriCity(station.station.geo[0], station.station.geo[1]) ? 'Trójmiasto' : location,
+        lat: station.station.geo[0],
+        lng: station.station.geo[1],
+        pm25: 0, // Will be filled when station details are fetched
+        pm10: 0, // Will be filled when station details are fetched
+        timestamp: new Date().toISOString(),
+        additionalData: {
+          aqi: typeof station.aqi === 'string' ? parseInt(station.aqi) : station.aqi,
+          source: 'AQICN'
+        }
+      }));
+      
+      // Add the new sensors to the map
+      setCustomSensors(prev => {
+        // Filter out any previous search results
+        const filteredPrev = prev.filter(s => !s.id.startsWith('search-'));
+        return [...filteredPrev, ...newSensors];
+      });
+      
+      toast({
+        title: "Znaleziono stacje",
+        description: `Znaleziono ${stations.length} stacji pomiarowych w pobliżu ${location}`
+      });
+      
+    } catch (error) {
+      console.error("Error searching for sensors:", error);
+      toast({
+        title: "Błąd",
+        description: "Wystąpił błąd podczas wyszukiwania stacji",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSearching(false);
+    }
     
     setIsSearchDialogOpen(false);
   };

@@ -4,12 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
-import { toast } from "react-toastify";
+import { toast } from "@/hooks/use-toast";
+import { getCoordinatesForLocation } from "../utils/locationUtils";
 
 interface SearchSensorDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit?: (location: string, radius: number) => void;
+  onSubmit?: (location: string, radius: number, coordinates: {lat: number, lng: number} | null) => void;
 }
 
 export function SearchSensorDialog({ isOpen, onOpenChange, onSubmit }: SearchSensorDialogProps) {
@@ -18,11 +19,22 @@ export function SearchSensorDialog({ isOpen, onOpenChange, onSubmit }: SearchSen
   
   const handleSearch = () => {
     if (onSubmit && location) {
-      onSubmit(location, radius);
-      toast.info(`Wyszukiwanie czujników w pobliżu ${location} (promień: ${radius}km)`);
+      const coordinates = getCoordinatesForLocation(location);
+      
+      onSubmit(location, radius, coordinates);
+      
+      toast({
+        title: "Wyszukiwanie czujników",
+        description: `Wyszukiwanie czujników w pobliżu ${location} (promień: ${radius}km)`
+      });
+      
       onOpenChange(false); // Close dialog after submission
     } else if (!location) {
-      toast.warning("Proszę wprowadzić lokalizację");
+      toast({
+        title: "Błąd",
+        description: "Proszę wprowadzić lokalizację",
+        variant: "destructive"
+      });
     } else {
       onOpenChange(false);
     }
@@ -43,7 +55,7 @@ export function SearchSensorDialog({ isOpen, onOpenChange, onSubmit }: SearchSen
             <Label htmlFor="location">Lokalizacja</Label>
             <Input 
               id="location"
-              placeholder="np. Gdańsk, Sopot, Gdynia" 
+              placeholder="np. Gdańsk, Sopot, Gdynia, Ustka" 
               value={location}
               onChange={(e) => setLocation(e.target.value)}
             />

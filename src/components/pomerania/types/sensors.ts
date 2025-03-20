@@ -21,3 +21,10 @@ export interface AdditionalData {
   o3?: number;
   source?: 'Airly' | 'GIOS' | 'AQICN' | 'Custom';
 }
+
+export interface SensorFormValues {
+  name?: string;
+  connectionType?: 'url' | 'webhook' | 'api' | 'mqtt';
+  connectionValue?: string;
+  stationId?: string;
+}

@@ -29,3 +29,15 @@ export async function getStationsInBounds(lat: number, lng: number, distance = 5
     return [];
   }
 }
+
+export async function searchStationsNear(lat: number, lng: number, radiusKm: number = 5): Promise<Station[]> {
+  try {
+    console.log(`Searching for stations near lat=${lat}, lng=${lng}, radius=${radiusKm}km`);
+    // Convert km to degrees for bounding box (approximate)
+    const boundaryDegree = radiusKm / 111; // ~111km per degree
+    return await getStationsInBounds(lat, lng, boundaryDegree * 100);
+  } catch (error) {
+    console.error('Error searching for stations:', error);
+    return [];
+  }
+}
