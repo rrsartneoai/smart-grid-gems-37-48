@@ -17,7 +17,10 @@ const generateResponse = async (prompt: string): Promise<string> => {
     return response.text();
   } catch (error) {
     console.error("Błąd podczas generowania odpowiedzi:", error);
-    toast("Nie udało się wygenerować raportu. Sprawdź klucz API Gemini.");
+    toast({
+      title: "Błąd",
+      description: "Nie udało się wygenerować raportu. Sprawdź klucz API Gemini."
+    });
     return "Wystąpił błąd podczas generowania raportu. Spróbuj ponownie później.";
   }
 };

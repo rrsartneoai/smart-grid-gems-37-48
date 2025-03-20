@@ -13,6 +13,7 @@ const sensorFormSchema = z.object({
   name: z.string().min(1, { message: "Nazwa jest wymagana" }),
   connectionType: z.enum(["webhook", "api", "mqtt", "url"]),
   connectionValue: z.string().min(1, { message: "Wartość połączenia jest wymagana" }),
+  stationId: z.string().optional(),
 });
 
 export type SensorFormValues = z.infer<typeof sensorFormSchema>;
@@ -30,6 +31,7 @@ export function AddSensorDialog({ isOpen, onOpenChange, onSubmit }: AddSensorDia
       name: "",
       connectionType: "url",
       connectionValue: "",
+      stationId: "",
     },
   });
 

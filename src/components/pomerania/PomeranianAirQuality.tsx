@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { InfoCard } from "./InfoCard";
 import { ActionButtons } from "./ActionButtons";
@@ -11,6 +10,7 @@ import { RemoveSensorDialog } from "./dialogs/RemoveSensorDialog";
 import { SearchSensorDialog } from "./dialogs/SearchSensorDialog";
 import { toast } from "@/hooks/use-toast";
 import { SensorData } from "./types/sensors";
+import { AirQualitySource } from "./types/airQuality";
 import "react-toastify/dist/ReactToastify.css";
 
 export const PomeranianAirQuality = () => {
@@ -19,7 +19,6 @@ export const PomeranianAirQuality = () => {
   const [isSearchDialogOpen, setIsSearchDialogOpen] = useState(false);
   const [customSensors, setCustomSensors] = useState<SensorData[]>([]);
   
-  // Load custom sensors from localStorage on component mount
   useEffect(() => {
     const savedSensors = localStorage.getItem('customAirQualitySensors');
     if (savedSensors) {
@@ -31,7 +30,6 @@ export const PomeranianAirQuality = () => {
     }
   }, []);
   
-  // Save custom sensors to localStorage whenever it changes
   useEffect(() => {
     if (customSensors.length > 0) {
       localStorage.setItem('customAirQualitySensors', JSON.stringify(customSensors));
@@ -40,7 +38,6 @@ export const PomeranianAirQuality = () => {
   
   const handleAddSensor = async (data: SensorFormValues) => {
     try {
-      // For URL type connections, fetch data from AQICN API
       if (data.connectionType === 'url' && data.stationId) {
         toast({
           title: "Pobieranie danych",
@@ -62,7 +59,6 @@ export const PomeranianAirQuality = () => {
           throw new Error(`API error: ${result.status}`);
         }
         
-        // Create a new sensor with the fetched data
         const newSensor: SensorData = {
           id: `custom-aqicn-${stationId}`,
           stationName: data.name || result.data.city.name || `Stacja ${stationId}`,
@@ -91,18 +87,16 @@ export const PomeranianAirQuality = () => {
           description: `Dodano czujnik: ${newSensor.stationName}`
         });
       } else {
-        // Handle other connection types (webhook, api, mqtt)
         toast({
           title: "Dodano czujnik",
           description: `Dodano czujnik: ${data.name} (dane demonstracyjne)`
         });
         
-        // Add a placeholder sensor with demo data
         const newSensor: SensorData = {
           id: `custom-${Date.now()}`,
           stationName: data.name,
-          region: 'Custom',
-          lat: 54.372158, // Default to Gdańsk coordinates
+          region: 'Custom Region',
+          lat: 54.372158,
           lng: 18.638306,
           pm25: Math.floor(Math.random() * 50),
           pm10: Math.floor(Math.random() * 80),
@@ -111,7 +105,7 @@ export const PomeranianAirQuality = () => {
             aqi: Math.floor(Math.random() * 100),
             temperature: 20 + Math.random() * 10,
             humidity: 40 + Math.random() * 30,
-            source: 'Custom'
+            source: 'AQICN'
           }
         };
         
@@ -152,9 +146,6 @@ export const PomeranianAirQuality = () => {
   const handleSearchSensor = (location: string, radius: number) => {
     console.log("Searching for sensors near:", location, "within radius:", radius, "km");
     
-    // Here you would implement the actual sensor search functionality
-    // For example by calling an API endpoint or filtering local data
-    
     toast({
       title: "Wyszukiwanie czujników",
       description: `Wyszukiwanie czujników w pobliżu ${location} (promień: ${radius}km)`
@@ -178,7 +169,6 @@ export const PomeranianAirQuality = () => {
       <AirlyMapEmbed />
       <AirQualitySpaces />
 
-      {/* Dialogs */}
       <AddSensorDialog 
         isOpen={isAddDialogOpen} 
         onOpenChange={setIsAddDialogOpen}

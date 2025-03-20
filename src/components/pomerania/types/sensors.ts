@@ -19,5 +19,5 @@ export interface AdditionalData {
   no2?: number;
   so2?: number;
   o3?: number;
-  source?: 'Airly' | 'GIOS' | 'AQICN';
+  source?: 'Airly' | 'GIOS' | 'AQICN' | 'Custom';
 }

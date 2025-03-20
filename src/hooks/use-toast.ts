@@ -60,17 +60,17 @@ export function useToast() {
 }
 
 // Export a simpler version for direct use
-export const toast = (message: string | ToastProps) => {
-  if (typeof message === 'string') {
-    return sonnerToast(message);
+export const toast = (props: string | ToastProps): void => {
+  if (typeof props === 'string') {
+    sonnerToast(props);
   } else {
-    const { title, description, duration } = message;
+    const { title, description, duration } = props;
     if (title && description) {
-      return sonnerToast(title, { description, duration });
+      sonnerToast(title, { description, duration });
     } else if (title) {
-      return sonnerToast(title, { duration });
+      sonnerToast(title, { duration });
     } else if (description) {
-      return sonnerToast(description, { duration });
+      sonnerToast(description, { duration });
     }
   }
 };

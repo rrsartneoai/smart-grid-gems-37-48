@@ -54,7 +54,10 @@ export const extractKeyMetrics = async (text: string): Promise<Record<string, nu
       }
     } catch (error) {
       console.error('Błąd podczas generowania metryk:', error);
-      toast("Nie udało się wyodrębnić metryk. Sprawdź klucz API Gemini.");
+      toast({
+        title: "Błąd",
+        description: "Nie udało się wyodrębnić metryk. Sprawdź klucz API Gemini."
+      });
       
       return { error: "Błąd komunikacji z API Gemini" };
     }

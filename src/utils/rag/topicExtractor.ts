@@ -59,7 +59,10 @@ export async function extractMainTopics(text: string): Promise<string[]> {
       return topics;
     } catch (error) {
       console.error('Błąd podczas generowania tematów:', error);
-      toast("Nie udało się wygenerować tematów. Sprawdź klucz API Gemini.");
+      toast({
+        title: "Błąd",
+        description: "Nie udało się wygenerować tematów. Sprawdź klucz API Gemini."
+      });
       
       // Return default topics on error
       return [
