@@ -15,22 +15,34 @@ export function useToast() {
   const [toasts, setToasts] = useState<ToastProps[]>([]);
 
   const toast = useCallback(
-    ({ title, description, variant = "default", duration = 5000 }: ToastProps) => {
-      const id = Date.now().toString();
-      const newToast = { id, title, description, variant, duration };
+    (props: ToastProps | string) => {
+      // Handle the case where props is a string
+      if (typeof props === 'string') {
+        const id = Date.now().toString();
+        const newToast = { id, title: props, duration: 5000 };
+        
+        sonnerToast(props, { duration: 5000 });
+        
+        setToasts((toasts) => [...toasts, newToast]);
+        return id;
+      }
       
-      if (title && description) {
-        sonnerToast(title, {
-          description,
-          duration,
+      // Handle the case where props is a ToastProps object
+      const id = props.id || Date.now().toString();
+      const newToast = { ...props, id };
+      
+      if (props.title && props.description) {
+        sonnerToast(props.title, {
+          description: props.description,
+          duration: props.duration || 5000,
         });
-      } else if (title) {
-        sonnerToast(title, {
-          duration,
+      } else if (props.title) {
+        sonnerToast(props.title, {
+          duration: props.duration || 5000,
         });
-      } else if (description) {
-        sonnerToast(description, {
-          duration,
+      } else if (props.description) {
+        sonnerToast(props.description, {
+          duration: props.duration || 5000,
         });
       }
       

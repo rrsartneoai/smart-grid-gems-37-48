@@ -1,12 +1,13 @@
+
 import { useEffect, useState, lazy, Suspense } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import { log } from 'console';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Card } from '@/components/ui/card';
 import { CardContent } from '@/components/ui/card';
 import { MapHeader } from './map/MapHeader';
 import { AirQualityLegend } from '../components/AirQualityLegend';
+import { SensorData } from './types/sensors';
 
 interface AirQualityData {
   id: string;
@@ -23,6 +24,10 @@ interface AirQualityData {
   };
 }
 
+interface AirlyMapProps {
+  customSensors?: SensorData[];
+}
+
 const getAQIColor = (aqi: number): string => {
   if (aqi <= 50) return '#00E400';
   if (aqi <= 100) return '#FFFF00';
@@ -32,10 +37,11 @@ const getAQIColor = (aqi: number): string => {
   return '#7E0023';
 };
 
-const AirQualityMapBase = () => {
+const AirQualityMapBase = ({ customSensors = [] }: AirlyMapProps) => {
   const [data, setData] = useState<AirQualityData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [combinedData, setCombinedData] = useState<AirQualityData[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -122,8 +128,6 @@ const AirQualityMapBase = () => {
               });
           } else {
             console.log("result", result, "index", index, "stationIds", stationIds[index]);
-            
-            setError(`Failed to fetch air quality data for station ${stationIds[index]}`);
           }
         });
 
@@ -141,6 +145,28 @@ const AirQualityMapBase = () => {
     const interval = setInterval(fetchData, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
+  
+  // Combine API data with custom sensors
+  useEffect(() => {
+    // Convert custom sensors to AirQualityData format
+    const formattedCustomSensors: AirQualityData[] = customSensors.map(sensor => ({
+      id: sensor.id,
+      stationName: sensor.stationName,
+      region: sensor.region,
+      coordinates: [sensor.lat, sensor.lng],
+      measurements: {
+        aqi: sensor.additionalData?.aqi || 0,
+        pm25: sensor.pm25,
+        pm10: sensor.pm10,
+        temperature: sensor.additionalData?.temperature,
+        humidity: sensor.additionalData?.humidity,
+        timestamp: sensor.timestamp
+      }
+    }));
+    
+    // Combine with API data
+    setCombinedData([...data, ...formattedCustomSensors]);
+  }, [data, customSensors]);
 
   if (isLoading) {
     return (
@@ -150,7 +176,7 @@ const AirQualityMapBase = () => {
     );
   }
 
-  if (error) {
+  if (error && combinedData.length === 0) {
     return (
       <div className="h-[600px] w-full flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-lg text-red-500">
         Błąd podczas ładowania danych
@@ -174,9 +200,9 @@ const AirQualityMapBase = () => {
           attribution='Air Quality Tiles &copy; <a href="https://waqi.info">WAQI.info</a>'
           opacity={0.6}
         />
-        {data.map((station, index) => (
+        {combinedData.map((station, index) => (
           <Marker
-            key={`station-${index}`}
+            key={`station-${station.id}`}
             position={station.coordinates}
             icon={L.divIcon({
               className: 'custom-marker',
@@ -191,7 +217,8 @@ const AirQualityMapBase = () => {
                   color: white;
                   font-weight: bold;
                   border: 2px solid white;
-                  box-shadow: 0 2px 4px rgba(0,0,0,0.3);">${station.measurements.aqi}</div>`
+                  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                  ${station.id.startsWith('custom') ? 'border: 3px solid #3b82f6;' : ''}">${station.measurements.aqi}</div>`
             })}
           >
             <Popup>
