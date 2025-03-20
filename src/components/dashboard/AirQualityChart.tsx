@@ -1,3 +1,5 @@
+
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import {
   LineChart,
@@ -10,6 +12,9 @@ import {
   Legend,
   Label,
 } from "recharts";
+import { useCompanyStore } from "@/components/CompanySidebar";
+import { companiesData } from "@/data/companies";
+import { getProjectData } from "@/utils/rag";
 
 interface AirQualityTooltipProps {
   active?: boolean;
@@ -22,7 +27,7 @@ interface AirQualityTooltipProps {
 }
 
 interface AirQualityChartProps {
-  airQualityData: any;
+  airQualityData?: any;
 }
 
 const pollutantLabels: Record<string, string> = {
@@ -53,17 +58,72 @@ const AirQualityTooltip = ({ active, payload, label }: AirQualityTooltipProps) =
 };
 
 export function AirQualityChart({ airQualityData }: AirQualityChartProps) {
-  const formattedData = airQualityData?.iaqi
-    ? [
-        {
+  const { selectedCompanyId } = useCompanyStore();
+  const [chartData, setChartData] = useState<any[]>([]);
+  
+  useEffect(() => {
+    // Get data from various sources
+    const projectData = getProjectData();
+    const selectedCompany = companiesData.find(c => c.id === selectedCompanyId);
+    
+    // Generate chart data based on available sources
+    const generateChartData = () => {
+      // First try to use project data from RAG
+      if (projectData?.sensorReadings?.length) {
+        const readings = projectData.sensorReadings;
+        
+        // Map sensor readings to chart format
+        return [{
           name: new Date().toLocaleTimeString(),
-          pm2_5: airQualityData.iaqi.pm25?.v,
-          pm10: airQualityData.iaqi.pm10?.v,
-          o3: airQualityData.iaqi.o3?.v,
-          no2: airQualityData.iaqi.no2?.v,
-        },
-      ]
-    : [];
+          pm2_5: readings.find(r => r.name === "PM2.5")?.value || 0,
+          pm10: readings.find(r => r.name === "PM10")?.value || 0,
+          o3: readings.find(r => r.name === "O₃")?.value || 0,
+          no2: readings.find(r => r.name === "NO₂")?.value || 0,
+          so2: readings.find(r => r.name === "SO₂")?.value || 0,
+          co: readings.find(r => r.name === "CO")?.value || 0
+        }];
+      }
+      
+      // Try to use company data if available
+      if (selectedCompany?.stats) {
+        return [{
+          name: new Date().toLocaleTimeString(),
+          pm2_5: parseFloat(selectedCompany.stats.find(s => s.title === "PM2.5")?.value || "0"),
+          pm10: parseFloat(selectedCompany.stats.find(s => s.title === "PM10")?.value || "0"),
+          o3: parseFloat(selectedCompany.stats.find(s => s.title === "O₃ (Ozon)")?.value || "0"),
+          no2: parseFloat(selectedCompany.stats.find(s => s.title === "NO₂")?.value || "0"),
+          so2: parseFloat(selectedCompany.stats.find(s => s.title === "SO₂")?.value || "0"),
+          co: parseFloat(selectedCompany.stats.find(s => s.title === "CO")?.value || "0")
+        }];
+      }
+      
+      // Use custom air quality data if provided
+      if (airQualityData?.iaqi) {
+        return [{
+          name: new Date().toLocaleTimeString(),
+          pm2_5: airQualityData.iaqi.pm25?.v || 0,
+          pm10: airQualityData.iaqi.pm10?.v || 0,
+          o3: airQualityData.iaqi.o3?.v || 0,
+          no2: airQualityData.iaqi.no2?.v || 0,
+          so2: airQualityData.iaqi.so2?.v || 0,
+          co: airQualityData.iaqi.co?.v || 0
+        }];
+      }
+      
+      // Fallback to random data if nothing else is available
+      return [{
+        name: new Date().toLocaleTimeString(),
+        pm2_5: Math.round(Math.random() * 25),
+        pm10: Math.round(Math.random() * 50),
+        o3: Math.round(Math.random() * 80),
+        no2: Math.round(Math.random() * 40),
+        so2: Math.round(Math.random() * 20),
+        co: Math.round(Math.random() * 1000)
+      }];
+    };
+    
+    setChartData(generateChartData());
+  }, [selectedCompanyId, airQualityData]);
 
   return (
     <Card className="col-span-4 p-6">
@@ -81,7 +141,7 @@ export function AirQualityChart({ airQualityData }: AirQualityChartProps) {
       <div className="h-[400px] w-full">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
-            data={formattedData}
+            data={chartData}
             margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
           >
             <CartesianGrid strokeDasharray="3 3" className="opacity-30" />

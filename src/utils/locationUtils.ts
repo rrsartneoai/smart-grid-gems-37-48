@@ -1,5 +1,3 @@
-
-
 /**
  * Maps location names to coordinates
  */
@@ -17,7 +15,8 @@ const locationCoordinatesMap: Record<string, LocationCoordinates> = {
   "gdynia": { lat: 54.5189, lng: 18.5305 },
   "gdynia ul starowiejska": { lat: 54.5163, lng: 18.5361 },
   "trójmiasto": { lat: 54.441581, lng: 18.560096 },
-  "trojmiasto": { lat: 54.441581, lng: 18.560096 }
+  "trojmiasto": { lat: 54.441581, lng: 18.560096 },
+  "ustka": { lat: 54.5805, lng: 16.8614 } // Added Ustka back
 };
 
 /**
@@ -105,4 +104,3 @@ export const getUnitForReading = (name: string): string => {
   
   return units[name] || "";
 };
-
