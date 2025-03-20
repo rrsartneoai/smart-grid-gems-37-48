@@ -1,6 +1,5 @@
-
 import { useEffect, useState, lazy, Suspense } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Card } from '@/components/ui/card';
@@ -26,7 +25,20 @@ interface AirQualityData {
 
 interface AirlyMapProps {
   customSensors?: SensorData[];
+  center?: [number, number];
 }
+
+const MapCenterUpdater = ({ center }: { center?: [number, number] }) => {
+  const map = useMap();
+  
+  useEffect(() => {
+    if (center) {
+      map.setView(center, 13);
+    }
+  }, [center, map]);
+  
+  return null;
+};
 
 const getAQIColor = (aqi: number): string => {
   if (aqi <= 50) return '#00E400';
@@ -37,11 +49,12 @@ const getAQIColor = (aqi: number): string => {
   return '#7E0023';
 };
 
-const AirQualityMapBase = ({ customSensors = [] }: AirlyMapProps) => {
+const AirQualityMapBase = ({ customSensors = [], center }: AirlyMapProps) => {
   const [data, setData] = useState<AirQualityData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [combinedData, setCombinedData] = useState<AirQualityData[]>([]);
+  const defaultCenter: [number, number] = [54.372158, 18.638306]; // Default center (Gdańsk)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -109,23 +122,22 @@ const AirQualityMapBase = ({ customSensors = [] }: AirlyMapProps) => {
         const stations: AirQualityData[] = [];
 
         results.forEach((result, index) => {
-          // Use nullish coalescing operator to handle possible null values
           if (result?.status === 'ok') {
             const data = result.data;
-              stations.push({
-                id: `aqicn-${stationIds[index]}-${data.idx}`,
-                stationName: data.city.name,
-                region: 'Gdańsk',  //  region information.
-                coordinates: data.city.geo,
-                measurements: {
-                  aqi: data.aqi,
-                  pm25: data.iaqi.pm25?.v || 0,
-                  pm10: data.iaqi.pm10?.v || 0,
-                  temperature: data.iaqi.t?.v,
-                  humidity: data.iaqi.h?.v,
-                  timestamp: data.time.iso
-                }
-              });
+            stations.push({
+              id: `aqicn-${stationIds[index]}-${data.idx}`,
+              stationName: data.city.name,
+              region: 'Gdańsk',  //  region information.
+              coordinates: data.city.geo,
+              measurements: {
+                aqi: data.aqi,
+                pm25: data.iaqi.pm25?.v || 0,
+                pm10: data.iaqi.pm10?.v || 0,
+                temperature: data.iaqi.t?.v,
+                humidity: data.iaqi.h?.v,
+                timestamp: data.time.iso
+              }
+            });
           } else {
             console.log("result", result, "index", index, "stationIds", stationIds[index]);
           }
@@ -146,9 +158,7 @@ const AirQualityMapBase = ({ customSensors = [] }: AirlyMapProps) => {
     return () => clearInterval(interval);
   }, []);
   
-  // Combine API data with custom sensors
   useEffect(() => {
-    // Convert custom sensors to AirQualityData format
     const formattedCustomSensors: AirQualityData[] = customSensors.map(sensor => ({
       id: sensor.id,
       stationName: sensor.stationName,
@@ -164,7 +174,6 @@ const AirQualityMapBase = ({ customSensors = [] }: AirlyMapProps) => {
       }
     }));
     
-    // Combine with API data
     setCombinedData([...data, ...formattedCustomSensors]);
   }, [data, customSensors]);
 
@@ -187,10 +196,12 @@ const AirQualityMapBase = ({ customSensors = [] }: AirlyMapProps) => {
   return (
     <div className="h-[600px] w-full rounded-lg overflow-hidden">
       <MapContainer
-        center={[54.372158, 18.638306]}
+        center={defaultCenter}
         zoom={13}
         className="h-full w-full"
       >
+        <MapCenterUpdater center={center} />
+        
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'

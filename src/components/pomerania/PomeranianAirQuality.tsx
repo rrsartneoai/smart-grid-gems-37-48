@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { InfoCard } from "./InfoCard";
 import { ActionButtons } from "./ActionButtons";
@@ -20,6 +19,7 @@ export const PomeranianAirQuality = () => {
   const [isSearchDialogOpen, setIsSearchDialogOpen] = useState(false);
   const [customSensors, setCustomSensors] = useState<SensorData[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [mapCenter, setMapCenter] = useState<[number, number] | undefined>(undefined);
   
   useEffect(() => {
     const savedSensors = localStorage.getItem('customAirQualitySensors');
@@ -46,7 +46,6 @@ export const PomeranianAirQuality = () => {
           description: `Pobieranie danych dla stacji...`
         });
         
-        // Extract station ID from URL
         let stationId = '';
         if (data.connectionValue.includes('@')) {
           const matches = data.connectionValue.match(/@(\d+)/);
@@ -179,6 +178,8 @@ export const PomeranianAirQuality = () => {
       return;
     }
     
+    setMapCenter([coordinates.lat, coordinates.lng]);
+    
     try {
       setIsSearching(true);
       const stations = await searchStationsNear(coordinates.lat, coordinates.lng, radius);
@@ -192,15 +193,14 @@ export const PomeranianAirQuality = () => {
         return;
       }
       
-      // Convert WAQI stations to SensorData format
       const newSensors: SensorData[] = stations.map(station => ({
         id: `search-aqicn-${station.uid}`,
         stationName: station.station.name,
         region: isInTriCity(station.station.geo[0], station.station.geo[1]) ? 'Trójmiasto' : location,
         lat: station.station.geo[0],
         lng: station.station.geo[1],
-        pm25: 0, // Will be filled when station details are fetched
-        pm10: 0, // Will be filled when station details are fetched
+        pm25: 0,
+        pm10: 0,
         timestamp: new Date().toISOString(),
         additionalData: {
           aqi: typeof station.aqi === 'string' ? parseInt(station.aqi) : station.aqi,
@@ -208,9 +208,7 @@ export const PomeranianAirQuality = () => {
         }
       }));
       
-      // Add the new sensors to the map
       setCustomSensors(prev => {
-        // Filter out any previous search results
         const filteredPrev = prev.filter(s => !s.id.startsWith('search-'));
         return [...filteredPrev, ...newSensors];
       });
@@ -244,7 +242,7 @@ export const PomeranianAirQuality = () => {
         onSearchClick={() => setIsSearchDialogOpen(true)}
       />
       
-      <AirlyMap customSensors={customSensors} />
+      <AirlyMap customSensors={customSensors} center={mapCenter} />
       <AqicnMapEmbed />
       <AirlyMapEmbed />
       <AirQualitySpaces />
