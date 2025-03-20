@@ -23,7 +23,7 @@ export async function getStationsInBounds(lat: number, lng: number, distance = 5
       throw new Error(`API error: ${data.status}`);
     }
     
-    return data.data;
+    return data.data || [];
   } catch (error) {
     console.error('Error in getStationsInBounds:', error);
     return [];
@@ -35,7 +35,10 @@ export async function searchStationsNear(lat: number, lng: number, radiusKm: num
     console.log(`Searching for stations near lat=${lat}, lng=${lng}, radius=${radiusKm}km`);
     // Convert km to degrees for bounding box (approximate)
     const boundaryDegree = radiusKm / 111; // ~111km per degree
-    return await getStationsInBounds(lat, lng, boundaryDegree * 100);
+    const stations = await getStationsInBounds(lat, lng, boundaryDegree * 100);
+    
+    // Make sure we have valid stations data before returning
+    return Array.isArray(stations) ? stations : [];
   } catch (error) {
     console.error('Error searching for stations:', error);
     return [];

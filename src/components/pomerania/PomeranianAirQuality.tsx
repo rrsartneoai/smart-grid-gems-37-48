@@ -184,7 +184,7 @@ export const PomeranianAirQuality = () => {
       setIsSearching(true);
       const stations = await searchStationsNear(coordinates.lat, coordinates.lng, radius);
       
-      if (stations.length === 0) {
+      if (!stations || stations.length === 0) {
         toast({
           title: "Brak wyników",
           description: `Nie znaleziono stacji pomiarowych w pobliżu ${location}`
@@ -193,20 +193,27 @@ export const PomeranianAirQuality = () => {
         return;
       }
       
-      const newSensors: SensorData[] = stations.map(station => ({
-        id: `search-aqicn-${station.uid}`,
-        stationName: station.station.name,
-        region: isInTriCity(station.station.geo[0], station.station.geo[1]) ? 'Trójmiasto' : location,
-        lat: station.station.geo[0],
-        lng: station.station.geo[1],
-        pm25: 0,
-        pm10: 0,
-        timestamp: new Date().toISOString(),
-        additionalData: {
-          aqi: typeof station.aqi === 'string' ? parseInt(station.aqi) : station.aqi,
-          source: 'AQICN'
+      const newSensors: SensorData[] = stations.map(station => {
+        if (!station || !station.station || !Array.isArray(station.station.geo) || station.station.geo.length < 2) {
+          console.log("Invalid station data:", station);
+          return null;
         }
-      }));
+        
+        return {
+          id: `search-aqicn-${station.uid}`,
+          stationName: station.station.name,
+          region: isInTriCity(station.station.geo[0], station.station.geo[1]) ? 'Trójmiasto' : location,
+          lat: station.station.geo[0],
+          lng: station.station.geo[1],
+          pm25: 0,
+          pm10: 0,
+          timestamp: new Date().toISOString(),
+          additionalData: {
+            aqi: typeof station.aqi === 'string' ? parseInt(station.aqi) : station.aqi,
+            source: 'AQICN'
+          }
+        };
+      }).filter(Boolean) as SensorData[];
       
       setCustomSensors(prev => {
         const filteredPrev = prev.filter(s => !s.id.startsWith('search-'));
@@ -215,7 +222,7 @@ export const PomeranianAirQuality = () => {
       
       toast({
         title: "Znaleziono stacje",
-        description: `Znaleziono ${stations.length} stacji pomiarowych w pobliżu ${location}`
+        description: `Znaleziono ${newSensors.length} stacji pomiarowych w pobliżu ${location}`
       });
       
     } catch (error) {

@@ -1,12 +1,4 @@
-export const isInTriCity = (lat: number, lon: number) => {
-  const bounds = {
-    north: 54.60,  // North of Gdynia
-    south: 54.30,  // South of Gdańsk
-    east: 18.70,   // East coast
-    west: 18.40    // West of Gdynia
-  };
-  return lat >= bounds.south && lat <= bounds.north && lon >= bounds.west && lon <= bounds.east;
-};
+
 
 /**
  * Maps location names to coordinates
@@ -25,8 +17,7 @@ const locationCoordinatesMap: Record<string, LocationCoordinates> = {
   "gdynia": { lat: 54.5189, lng: 18.5305 },
   "gdynia ul starowiejska": { lat: 54.5163, lng: 18.5361 },
   "trójmiasto": { lat: 54.441581, lng: 18.560096 },
-  "trojmiasto": { lat: 54.441581, lng: 18.560096 },
-  "ustka": { lat: 54.5805, lng: 16.8614 } // Added Ustka
+  "trojmiasto": { lat: 54.441581, lng: 18.560096 }
 };
 
 /**
@@ -52,6 +43,28 @@ export const getCoordinatesForLocation = (location: string): LocationCoordinates
   }
   
   return null;
+};
+
+/**
+ * Checks if coordinates are in the Tri-City area (Gdańsk, Gdynia, Sopot)
+ */
+export const isInTriCity = (lat: number, lng: number): boolean => {
+  if (!lat || !lng) return false;
+  
+  // Approximate bounding box for Tricity area
+  const triCityBounds = {
+    north: 54.60, // North of Gdynia
+    south: 54.30, // South of Gdańsk
+    east: 18.80,  // East coast
+    west: 18.40   // West boundary
+  };
+  
+  return (
+    lat >= triCityBounds.south &&
+    lat <= triCityBounds.north &&
+    lng >= triCityBounds.west &&
+    lng <= triCityBounds.east
+  );
 };
 
 /**
@@ -92,3 +105,4 @@ export const getUnitForReading = (name: string): string => {
   
   return units[name] || "";
 };
+
